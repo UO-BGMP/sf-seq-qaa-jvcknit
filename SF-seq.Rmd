@@ -1,0 +1,31 @@
+---
+title: "SF-seq"
+author: "Jake VanCampen"
+date: "`r date()`"
+output: pdf_document
+---
+
+
+## SF-seq read quality score distributions
+
+In this assignment I worked with the following read files from `/projects/bgmp/2017_sequencing/demultiplexed`: 
+
+```
+2_2B_control_S2_L008_R1_001.fastq.gz
+2_2B_control_S2_L008_R2_001.fastq.gz
+29_4E_fox_S21_L008_R1_001.fastq.gz
+29_4E_fox_S21_L008_R2_001.fastq.gz
+```
+
+
+To determine quality score distributions for each read the program FastQC was loaded on talapas along with it's dependencies: 
+`ml easybuild intel/2017a FastQC`
+
+
+In a working directory called SF-seq, a new directory was created for the output of FastQC. FastQC was then run using the following options on all four files. 
+
+```
+$ fastqc --noextract -o fastqc_out -t 4 \
+2_2B_control_S2_L008_R1_001.fastq.gz 2_2B_control_S2_L008_R2_001.fastq.gz \
+29_4E_fox_S21_L008_R1_001.fastq.gz 29_4E_fox_S21_L008_R2_001.fastq.gz
+```
