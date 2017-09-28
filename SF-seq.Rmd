@@ -31,18 +31,104 @@ $ fastqc --noextract -o fastqc_out -t 4 \
 
 ## Results 
 
-Quality score distributions for the forward and reverse reads as well as per-base N content of both treatments are shown below: 
+Quality score distributions for the forward and reverse reads as well as per-base N content of both treatments were extracted from the FastQC output and compared to result from my quality score distribution plots.
 
-![29_4E_fox_S2 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R1_001_fastqc/Images/per_base_quality.png)
+The quality score distributions for the treatment `29_4E_fox_S21` show high average quality scores (approching 40) for read one with lower quality scores at the begining and slowly tapering towards the end of the read (Figure 1). Read two shows a lower quality score across all the bases, not exceeding 38, with low quality at the start and end of the read (Figures 2). The percent N-content across the bases for reads one and two show the highest percent N-content at the first base position for both reads, and undetectable N-content over the remaining base positions (Figures 3, 4). The detectable N-content at the first base position explains the low quality start in the quality score distributuions because an 'N' at that position will decrease the average quality score at that base position. The plots for the treatment `2_2B_control` show a similar pattern where read two shows a lower average quality score than read one, and the low quality score at the begining of the read is reflected in the percent N-content of each read at base position one (Figure 5-8). 
+
+
+I then ran my quality score distribution script `qscore_dist2.py` on the files using the following slurm script:
+```
+#!/bin/bash
+#SBATCH --partition=fat            ### partition
+#SBATCH --job-name=QD     ### Job Name
+#SBATCH --output=QD.out    ### File in which to store job output
+#SBATCH --error=QD.err     ### File in which to store job error messages
+#SBATCH --time=0-24:00:00           ### Wall clock time limit in Days-HH:MM:SS
+#SBATCH --nodes=1                   ### Node count required for the job
+#SBATCH --ntasks-per-node=28        ### Nuber of tasks to be launched per Node
+#SBATCH --mail-user=jvancamp@uoregon.edu        ### Notifyme
+#SBATCH --mail-type=ALL                         ### All of it
+
+# load the necessary modules
+ml zlib/1.2.11 python3/3.6.1
+
+# run qscore_dist2.py on all files
+time ./qscore_dist2.py -f ~/SF-seq/data/2_2B_control_S2_L008_R1_001.fastq
+
+# run qscore_dist2.py on all files
+time ./qscore_dist2.py -f ~/SF-seq/data/2_2B_control_S2_L008_R2_001.fastq
+
+# run qscore_dist2.py on all files
+time ./qscore_dist2.py -f ~/SF-seq/data/29_4E_fox_S21_L008_R1_001.fastq
+
+# run qscore_dist2.py on all files
+time ./qscore_dist2.py -f ~/SF-seq/data/29_4E_fox_S21_L008_R2_001.fastq
+
+```
+
+The error file from the script held the time of each run, showing that each run took less than 20 minutes, while the total runtime was just over one hour.
+
+```
+$ cat QD.err
+
+The following have been reloaded with a version change:
+  1) zlib/1.2.8 => zlib/1.2.11
+
+
+real	18m24.967s
+user	18m21.792s
+sys	0m1.324s
+
+real	18m28.796s
+user	18m26.856s
+sys	0m1.334s
+
+real	15m24.851s
+user	15m23.165s
+sys	0m1.163s
+
+real	15m16.293s
+user	15m14.693s
+sys	0m1.070s
+```
+
+The quality score distribution plots from my script are shown in Figures 9-12. These distributuions show similar patterns as the results from the FastQC output. Read two for both treatments shows a lower average quality score for more base positions than in read one, and the quality score drop-off toward the begining and end of the read is similar to the results found in the FastQC output as expected. 
+
+
+## Adaptor trimming comparison
+
+
+
+
+
+![29_4E_fox_S21 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R1_001_fastqc/Images/per_base_quality.png) 
+
 
 ![29_4E_fox_S2 Read2 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R2_001_fastqc/Images/per_base_quality.png)
 
-![29_4E_fox_S2 Per-base N-content](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R1_001_fastqc/Images/per_base_n_content.png)
+![29_4E_fox_S2 Read 1 Per-base N-content](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R1_001_fastqc/Images/per_base_n_content.png)
+
+![29_4E_fox_S2 Read 2 Per-base N-content](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R2_001_fastqc/Images/per_base_n_content.png)
 
 
 ![2_2B_control_S2 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R1_001_fastqc/Images/per_base_quality.png)
 
-![2_2B_control_S2 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R2_001_fastqc/Images/per_base_quality.png)
+![2_2B_control_S2 Read2 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R2_001_fastqc/Images/per_base_quality.png)
 
-![2_2B_control_S2 Per-base N-content](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R2_001_fastqc/Images/per_base_n_content.png)
+![2_2B_control_S2 Per-base N-content](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R1_001_fastqc/Images/per_base_n_content.png)
+
+![2_2B_control_S2 Read2 Per-base N-content](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R2_001_fastqc/Images/per_base_n_content.png)
+
+
+![29_4E_fox_S21 Read1 QScore distribution (My Script)](/Users/JakeVanCampen/Documents/SF_seq/my_script_out/29_4E_fox_S21_L008_R1_001.fastq_dist1.png)
+
+![29_4E_fox_S21 Read2 QScore distribution (My Script)](/Users/JakeVanCampen/Documents/SF_seq/my_script_out/29_4E_fox_S21_L008_R2_001.fastq_dist1.png)
+
+![2_2B_control_S2 Read1 QScore distribution (My Script)](/Users/JakeVanCampen/Documents/SF_seq/my_script_out/2_2B_control_S2_L008_R1_001.fastq_dist1.png)
+
+
+![2_2B_control_S2 Read2 QScore distribution (My Script)](/Users/JakeVanCampen/Documents/SF_seq/my_script_out/2_2B_control_S2_L008_R2_001.fastq_dist1.png)
+
+
+
 
