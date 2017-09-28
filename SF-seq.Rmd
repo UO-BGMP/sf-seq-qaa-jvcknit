@@ -17,7 +17,6 @@ In this assignment I worked with the following read files from `/projects/bgmp/2
 29_4E_fox_S21_L008_R2_001.fastq.gz
 ```
 
-
 To determine quality score distributions for each read the program FastQC was loaded on talapas along with it's dependencies: 
 `ml easybuild intel/2017a FastQC`
 
@@ -29,3 +28,21 @@ $ fastqc --noextract -o fastqc_out -t 4 \
 2_2B_control_S2_L008_R1_001.fastq.gz 2_2B_control_S2_L008_R2_001.fastq.gz \
 29_4E_fox_S21_L008_R1_001.fastq.gz 29_4E_fox_S21_L008_R2_001.fastq.gz
 ```
+
+## Results 
+
+Quality score distributions for the forward and reverse reads as well as per-base N content of both treatments are shown below: 
+
+![29_4E_fox_S2 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R1_001_fastqc/Images/per_base_quality.png)
+
+![29_4E_fox_S2 Read2 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R2_001_fastqc/Images/per_base_quality.png)
+
+![29_4E_fox_S2 Per-base N-content](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R1_001_fastqc/Images/per_base_n_content.png)
+
+
+![2_2B_control_S2 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R1_001_fastqc/Images/per_base_quality.png)
+
+![2_2B_control_S2 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R2_001_fastqc/Images/per_base_quality.png)
+
+![2_2B_control_S2 Per-base N-content](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/2_2B_control_S2_L008_R2_001_fastqc/Images/per_base_n_content.png)
+
