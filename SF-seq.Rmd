@@ -66,7 +66,7 @@ time ./qscore_dist2.py -f ~/SF-seq/data/29_4E_fox_S21_L008_R2_001.fastq
 
 ```
 
-The error file from the script held the time of each run, showing that each run took less than 20 minutes, while the total runtime was just over one hour.
+The error file from the script held the time of each run, showing that each run took less than 20 minutes, while the total runtime was just over one hour. While this is slower than the total runtime of FastQC (2m 46s) this could because FastQC is written in Java which is compiled rather than interpreted, and whose data structures might be more efficient; result in a faster runtime for this type of analysis. The FastQC analysis I ran also included the threading option -t 4 which ran the analysis for each file as a separate task.
 
 ```
 $ cat QD.err
@@ -95,10 +95,44 @@ sys	0m1.070s
 The quality score distribution plots from my script are shown in Figures 9-12. These distributuions show similar patterns as the results from the FastQC output. Read two for both treatments shows a lower average quality score for more base positions than in read one, and the quality score drop-off toward the begining and end of the read is similar to the results found in the FastQC output as expected. 
 
 
+
 ## Adaptor trimming comparison
 
+The sequences must be filtered to trim known adapter sequences from each read so that only the insert sequences remain. With the common occurance of PCR primer contamination, PCR primers are also important to remove. There are a variety of programs that accomplish these tasks, some loaded on Talapas include: `process_shortreads` (part of the Stacks pipeline), `Trimmomatic`, and `cutadapt`. The programs are notably different in a couple of ways. First, Trimmomatic is written in Java, cutadapt is a python package available through the Python Package Index, and Process shortreads is written in C++ and Perl. There are numerous differences for dealing with paired end reads using the mentioned programs. Trimmomatic takes forward and reverse reads, and outputs four files: both paired and unpaired forward and reverse reads. Paired forward and reverse reads have to be complementary, while unpaired forward and reverse read files include reads where either the forward or reverse did not meet the quality threshold. Process_shortread by default discards low quality reads unless their retention is specified as an option. Cutadapt by defualt must take pairs of reads, and will throw out the pair if quality is low, outputting adapter-trimmed read pairs to two forward and reverse read files. Demultiplexing is not supported in cutadapt where it is supported in Trimmomatic and Process_shortreads. This analysis was carried out using process_shortreads because it contains all functionality necessary for this analysis with concise runtime options. The following scripts were run to properly trim adapter sequences from sequenced reads: 
+
+```
+# run process_shortreads on the set of paired end-reads
+process_shortreads -1 ~/SF-seq/2_2B_control_S2_L008_R1_001.fastq.gz -2 ~/SF-seq/2_2B_control_S2_L008_R2_001.fastq.gz -o ~/SF-s$
+--adapter_1 ACACTCTTTCCCTACACGACGCTCTTCCGATCT \
+--adapter_2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
 
 
+# run process_shortreads on the set of paired end-reads
+process_shortreads -1 ~/SF-seq/29_4E_fox_S21_L008_R1_001.fastq.gz -2 ~/SF-seq/29_4E_fox_S21_L008_R2_001.fastq.gz -o ~/SF-s$
+--adapter_1 ACACTCTTTCCCTACACGACGCTCTTCCGATCT \
+--adapter_2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
+```
+
+The results for each treatment are shown below: 
+```
+File 29_4E_fox_S21_L008_R1_001.fastq.gz
+Total Sequences	9654866
+Reads containing adapter sequence	297563
+Ambiguous Barcodes	0
+Low Quality	0
+Trimmed Reads	275693
+Orphaned Paired-ends	0
+Retained Reads	9632996
+
+File 2_2B_control_S2_L008_R1_001.fastq.gz
+Total Sequences	11661330
+Reads containing adapter sequence	331159
+Ambiguous Barcodes	0
+Low Quality	0
+Trimmed Reads	272157
+Orphaned Paired-ends	0
+Retained Reads	11602328
+```
 
 
 ![29_4E_fox_S21 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R1_001_fastqc/Images/per_base_quality.png) 
@@ -128,6 +162,10 @@ The quality score distribution plots from my script are shown in Figures 9-12. T
 
 
 ![2_2B_control_S2 Read2 QScore distribution (My Script)](/Users/JakeVanCampen/Documents/SF_seq/my_script_out/2_2B_control_S2_L008_R2_001.fastq_dist1.png)
+
+
+
+
 
 
 
