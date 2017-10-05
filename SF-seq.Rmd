@@ -3,8 +3,8 @@ title: "SF-seq"
 author: "Jake VanCampen"
 date: '`r date()`'
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 
@@ -19,7 +19,7 @@ I worked with the following sets of paired-end reads representing two splicing f
 29_4E_fox_S21_L008_R2_001.fastq.gz
 ```
 
-To determine quality score distributions for each read the program FastQC was loaded on talapas along with it's dependencies: 
+To determine quality score distributions for each read the program FastQC was loaded on the high performace computer along with it's dependencies: 
 `ml easybuild intel/2017a FastQC`
 
 
@@ -33,24 +33,15 @@ $ fastqc --noextract -o fastqc_out -t 4 \
 
 ## Results 
 
-Quality score distributions for the forward and reverse reads as well as per-base N content of both treatments were extracted from the FastQC output and compared to result from my quality score distribution plots.
+Quality score distributions for the forward and reverse reads as well as per-base N content of both treatments were extracted from the FastQC output and compared to results from my quality score distribution plots.
 
-The quality score distributions for the treatment `29_4E_fox_S21` show high average quality scores (approching 40) for read one with lower quality scores at the begining and slowly tapering towards the end of the read (Figure 1). Read two shows a lower quality score across all the bases, not exceeding 38, with low quality at the start and end of the read (Figures 2). The percent N-content across the bases for reads one and two show the highest percent N-content at the first base position for both reads, and undetectable N-content over the remaining base positions (Figures 3, 4). The detectable N-content at the first base position explains the low quality start in the quality score distributuions because an 'N' at that position will decrease the average quality score at that base position. The plots for the treatment `2_2B_control` show a similar pattern where read two shows a lower average quality score than read one, and the low quality score at the begining of the read is reflected in the percent N-content of each read at base position one (Figure 5-8). 
+The quality score distributions for the treatment `29_4E_fox_S21` show high average quality scores (approching 40) for read one with lower quality scores at the begining and slowly tapering towards the end of the read (Figure 1). Read two shows a lower quality score across all the bases, not exceeding 38, with lowest quality at the start and end of the read (Figures 2). The percent N-content across the bases for reads one and two show the highest percent N-content at the first base position for both reads, and undetectable N-content over the remaining base positions (Figures 3, 4). The detectable N-content at the first base position explains the low quality start in the quality score distributuions because an 'N' at that position will decrease the average quality score at that base position. The plots for the treatment `2_2B_control` show a similar pattern where read two shows a lower average quality score than read one, and the low quality score at the begining of the read is reflected in the percent N-content of each read at base position one (Figure 5-8). 
 
 
-I then ran my quality score distribution script `qscore_dist2.py` on the files using the following slurm script:
+I then ran my quality score distribution script `qscore_dist2.py` on the files using the high performance computer:
+
+
 ```
-#!/bin/bash
-#SBATCH --partition=fat            ### partition
-#SBATCH --job-name=QD     ### Job Name
-#SBATCH --output=QD.out    ### File in which to store job output
-#SBATCH --error=QD.err     ### File in which to store job error messages
-#SBATCH --time=0-24:00:00           ### Wall clock time limit in Days-HH:MM:SS
-#SBATCH --nodes=1                   ### Node count required for the job
-#SBATCH --ntasks-per-node=28        ### Nuber of tasks to be launched per Node
-#SBATCH --mail-user=jvancamp@uoregon.edu        ### Notifyme
-#SBATCH --mail-type=ALL                         ### All of it
-
 # load the necessary modules
 ml zlib/1.2.11 python3/3.6.1
 
@@ -68,7 +59,7 @@ time ./qscore_dist2.py -f ~/SF-seq/data/29_4E_fox_S21_L008_R2_001.fastq
 
 ```
 
-The error file from the script held the time of each run, showing that each run took less than 20 minutes, while the total runtime was just over one hour. While this is slower than the total runtime of FastQC (2m 46s) this could because FastQC is written in Java which is compiled rather than interpreted, and whose data structures might be more efficient resulting in a faster runtime for this type of analysis. The FastQC analysis included the multi-threading option -t 4 which ran the analysis for each file on a separate thread, likely decreasing runtime compared to my script.
+The error file from the script that ran `qscore_dist2.py` held the time of each run, showing that each run took less than 20 minutes, while the total runtime was just over one hour. This is slower than the total runtime of FastQC (2m 46s). FastQC analysis included the multi-threading option -t 4 which ran the analysis for each file on a separate thread, likely decreasing runtime compared to my script. Additionally, FastQC is written in Java and may have more efficient data structures than my script written in Python, potentially resulting in a faster runtime for this analysis.  
 
 ```
 $ cat QD.err
@@ -97,24 +88,25 @@ sys	0m1.070s
 The quality score distribution plots from my script are shown in Figures 9-12. These distributuions show similar patterns as the results from the FastQC output. Read two for both treatments shows a lower average quality score for more base positions than in read one, and the quality score drop-off toward the begining and end of the read is similar to the results found in the FastQC output as expected. 
 
 
-
 ## Adaptor trimming comparison
 
+
 The sequences must be filtered to trim known adapter sequences from each read so that only the insert sequences remain. With the common occurance of PCR primer contamination, PCR primers are also important to remove. There are a variety of programs that accomplish these tasks, some loaded on Talapas include: `process_shortreads` (part of the Stacks pipeline), `Trimmomatic`, and `cutadapt`. The programs are notably different in a few ways. First, Trimmomatic is written in Java, cutadapt is a python package available through the Python Package Index, and Process shortreads is written in C++ and Perl. There are numerous differences for dealing with paired end reads using the mentioned programs. Trimmomatic takes forward and reverse reads, and outputs four files: both paired and unpaired forward and reverse reads. Paired forward and reverse reads have to be complementary, while unpaired forward and reverse read files include reads where either the forward or reverse did not meet the quality threshold. Process_shortread by default discards low quality reads unless their retention is specified as an option. Cutadapt by defualt must take pairs of reads, and will throw out the pair if quality is low, outputting adapter-trimmed read pairs to two forward and reverse read files. Demultiplexing is not supported in cutadapt where it is supported in Trimmomatic and Process_shortreads. This analysis was carried out using process_shortreads because it contains all functionality necessary for this analysis with concise runtime options. The following scripts were run to properly trim adapter sequences from sequenced reads: 
+
 
 ```
 process_shortreads -1 /home/jvancamp/SF-seq/2_2B_control_S2_L008_R1_001.fastq.gz
 -2 /home/jvancamp/SF-seq/2_2B_control_S2_L008_R2_001.fastq.gz -o /home/jvancamp/
-SF-seq/2B_control --adapter_1 AATGATACGGCGACCACCGAGATCTACACNNNNNNNNACACTCTTTCCC
-TACACGACGCTCTTCCGATC*T --adapter_2 /5Phos/GATCGGAAGAGCACACGTCTGAACTCCAGTCACNNN
-NNNNNATCTCGTATGCCGTCTTCTGCTTG
+SF-seq/2B_control 
+--adapter_1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC 
+--adapter_2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
 
 
 process_shortreads -1 /home/jvancamp/SF-seq/29_4E_fox_S21_L008_R1_001.fastq.gz 
 -2 /home/jvancamp/SF-seq/29_4E_fox_S21_L008_R2_001.fastq.gz -o /home/jvancamp/
-SF-seq/4E_fox --adapter_1 AATGATACGGCGACCACCGAGATCTACACNNNNNNNNACACTCTTTCCCTAC
-ACGACGCTCTTCCGATC*T  --adapter_2 /5Phos/GATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNN
-NNNNATCTCGTATGCCGTCTTCTGCTTG
+SF-seq/4E_fox 
+--adapter_1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC  
+--adapter_2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
 ```
 
 
@@ -154,7 +146,7 @@ The files contained leading spaces which were removed with more Unix:
 
 ## Read Length Distributions
 
-Distributions of the frequency of both forward and reverse read lengths were plotted for both the `2B_control` and `4E_fox` treatment. First the data were transformed in R from the frequency tables generated using Unix commands:
+Distributions of the frequency of both forward and reverse read lengths were plotted for both the `2B_control` and `4E_fox` treatment. First the data were transformed in R from Unix-generated frequency tables.
 
 ```{r, message=FALSE}
 library(tidyverse)
@@ -194,7 +186,6 @@ dist_2B <-  ggplot(data = data_2B,
                  mapping = aes(
                    x = length, y = log(frequency), color = orientation)) +
   geom_point() +
-  geom_jitter() +
   labs(title = '2B_control Trimmed Read Length Distributuion',
        x = 'Read Length (bp)',
        y = 'Log Frequency)')
@@ -202,9 +193,11 @@ dist_2B <-  ggplot(data = data_2B,
 print(dist_2B)
 
 
-dist_4E <- ggplot(data = data_4E, mapping = aes(x = length, y = log(frequency), color = orientation)) + 
+dist_4E <- ggplot(data = data_4E, 
+                  mapping = aes(x = length, 
+                                y = log(frequency), 
+                                color = orientation)) + 
   geom_point() + 
-  geom_jitter() +
   labs(title = '4E_fox Trimmed Read Length Distribution',
        x = 'Read Length (bp)',
        y = 'Log Frequency)')
@@ -240,8 +233,7 @@ print(paste('percent_untrimmed:',percent_untrimmed))
 ```
 
 
-These results highlight that the large differences in the read length distributions for both treatments (R2 compared to R1) accounts for less than 1% of the total reads. This results reinforce the evidence for minimal excess adapter in the library prep as shown in the Fragment Analyzer trace (Figure X).
-
+These results highlight that the differences in the read length distributions for both treatments (R2 compared to R1) accounts for less than 1% of the total reads. Fragment analyzer traces show average library size was around 400bp for 2B_control and 375 for 4E_fox (Figures 13,14). For adapter sequences to appear in the sequenced reads, fragments of size less than ~250bp need to be sequenced. Fragmnents of these sizes account for a very small proportion of the fragmnets as shown in Figures 13 and 14, therfore it makes sense that adapter contamination occurs in a small fraction of the reads.
 
 ## rRNA reads and strand-specificity 
 
@@ -252,7 +244,8 @@ Murine non-coding RNA sequences were downloaded from the ensemble 90 database, a
 ml intel/2017a GMAP-GSNAP
 
 # build gmap db in specified directory
-gmap_build -d mouse_rRNA -D /home/jvancamp/SF-seq -g /home/jvancamp/SF-seq/Mus_musculus.GRCm38.ncrna.fa.gz
+gmap_build -d mouse_rRNA -D /home/jvancamp/SF-seq -g 
+/home/jvancamp/SF-seq/Mus_musculus.GRCm38.ncrna.fa.gz
 ```
 
 The reads were then aligned to ncRNA database to determine the proportion of reads containing potential rRNA sequences. The following scripts were used to align the reads with GSNAP. 
@@ -263,13 +256,15 @@ The reads were then aligned to ncRNA database to determine the proportion of rea
 ml intel/2017a GMAP-GSNAP
 
 # run GSNAP to align reads
-gsnap -d mouse_rRNA -D ~/SF-seq -t 16 -A sam -N 1 --gunzip --split-output=2B --no-sam-headers \
+gsnap -d mouse_rRNA -D ~/SF-seq -t 16 -A sam -N 1 --gunzip \
+--split-output=2B --no-sam-headers \
 ~/SF-seq/2B_control/2_2B_control_S2_L008_R1_001.1.fq.gz \
 ~/SF-seq/2B_control/2_2B_control_S2_L008_R2_001.2.fq.gz
 
 
 # run GSNAP to align reads
-gsnap --gunzip -t 16 --split-output=4E -A sam -N 1 -d mouse_rRNA -D ~/SF-seq --no-sam-headers \
+gsnap --gunzip -t 16 --split-output=4E -A sam -N 1 -d mouse_rRNA -D \
+~/SF-seq --no-sam-headers \
 ~/SF-seq/4E_fox/29_4E_fox_S21_L008_R1_001.1.fq.gz \
 ~/SF-seq/4E_fox/29_4E_fox_S21_L008_R2_001.2.fq.gz
 ```
@@ -281,9 +276,11 @@ A summary file of the number of reads for each mapping category was generated wi
 library(stringr)
 library(pander)
 
-align_2B <- read.csv('/Users/JakeVanCampen/Documents/SF_seq/align/2B_align.txt', sep = ' ', header = F) 
+align_2B <- read.csv('/Users/JakeVanCampen/Documents/SF_seq/align/2B_align.txt',
+                     sep = ' ', header = F) 
 
-align_4E <- read.csv('/Users/JakeVanCampen/Documents/SF_seq/align/4E_align.txt', sep = ' ', header = F)  
+align_4E <- read.csv('/Users/JakeVanCampen/Documents/SF_seq/align/4E_align.txt',
+                     sep = ' ', header = F)  
 
 # report the proportion of mapping reads
 concordant_2B <- align_2B[grepl('(concordant)', align_2B$V2),]
@@ -304,17 +301,65 @@ col_treat <- c('2B_control', '4E_fox')
 
 alignment <- rbind(row_2B,row_4E)
 alignment <- as.tibble(cbind(alignment,col_treat))
-colnames(alignment) <- c('mapping', 'nonmapping', 'percent_mapped', 'treatment') 
+colnames(alignment) <- c('mapping','nonmapping','percent_mapped','treatment') 
 
-alignment <- alignment %>% select(treatment, mapping, nonmapping, percent_mapped)
+alignment <- alignment %>% select(treatment,mapping,nonmapping,percent_mapped)
 alignment <- type_convert(alignment)
 
 pander(type_convert(alignment))
 ```
+This table shows the number of reads mapping and not mapping to mouse ncRNA for each treatment, and represents that there are a potential 3.73% of reads from ncRNAs for 2B_control, and 6.8% of reads from ncRNAs for 4E_fox. I have no logical hypothesis for the comparison of these numbers given that the variation in rRNA present in sequencing libraries is likely due to systematic error in library prep between the treatments.  
+
+
+Finally, to demonstrate the 'strandedness' of the libraries. I carried out the following analysis using Unix commands: 
+```
+[jvancamp@ln1 SF-seq]$ zcat 2_2B_control_S2_L008_R1_001.fastq.gz | \
+grep 'AAAAAAAAAAAAAAAAAAAAAAAAAA$' | wc -l
+358
+[jvancamp@ln1 SF-seq]$ zcat 2_2B_control_S2_L008_R2_001.fastq.gz | \
+grep 'AAAAAAAAAAAAAAAAAAAAAAAAAA$' | wc -l
+2915
+[jvancamp@ln1 SF-seq]$ zcat 2_2B_control_S2_L008_R2_001.fastq.gz | \
+grep 'TTTTTTTTTTTTTTTTTTTTTTTTTT$' | wc -l
+500
+[jvancamp@ln1 SF-seq]$ zcat 2_2B_control_S2_L008_R1_001.fastq.gz | \
+grep 'TTTTTTTTTTTTTTTTTTTTTTTTTT$' | wc -l
+3319
+[jvancamp@ln1 SF-seq]$ zcat 29_4E_fox_S21_L008_R1_001.fastq.gz | \
+grep 'TTTTTTTTTTTTTTTTTTTTTTTTTT$' | wc -l
+1858
+[jvancamp@ln1 SF-seq]$ zcat 29_4E_fox_S21_L008_R1_001.fastq.gz | \
+grep 'AAAAAAAAAAAAAAAAAAAAAAAAAA$' | wc -l
+107
+[jvancamp@ln1 SF-seq]$ zcat 29_4E_fox_S21_L008_R2_001.fastq.gz | \
+grep 'AAAAAAAAAAAAAAAAAAAAAAAAAA$' | wc -l
+1305
+[jvancamp@ln1 SF-seq]$ zcat 29_4E_fox_S21_L008_R2_001.fastq.gz | \
+grep 'TTTTTTTTTTTTTTTTTTTTTTTTTT$' | wc -l
+262
+```
+
+Plot the results in ggplot:
+```{r message=FALSE, warning=FALSE}
+read <- rep(c("1","2"),4)
+trt <- c(rep('2B_control', 4),rep('4E_fox',4))
+poly <- rep(c(rep('A',2),rep('T',2)),2)
+num_reads <- c(358, 2915, 3319, 500, 107, 1305, 1858, 262) 
+
+strd_table <- type_convert(as.tibble(cbind(read, trt, poly, num_reads)))
+
+ggplot(strd_table, aes(poly, num_reads, fill = as.factor(read))) +
+  geom_col(position = position_dodge()) +
+  facet_grid(~trt)+
+  labs(x = '', y = 'Number of Reads')
+
+```
+
+The barchart shows the number of reads containing poly A and poly T tails for reads 1 and 2 corresponding to each treatment. These results show that read 1 has substantially more reads with a poly-T tail compared to read 2 for both treatments, and that read 2 has substantially more reads with poly-A tails compared to read 1 for both treatments. This makes sense because it is expected that read 1 will be the reverse compliment of the RNA strand (poly-T tail), and read 2 will represent the RNA strand (poly-A tail). This shows the libraries are stranded, and there are many reads with poly-A, poly-T tails because they poly-A selection was carried out during library prep.
+
 
 
 ## Figures
-
 
 ![29_4E_fox_S21 Read1 QScore distribution](/Users/JakeVanCampen/Documents/SF_seq/fastqc_out/29_4E_fox_S21_L008_R1_001_fastqc/Images/per_base_quality.png) 
 
