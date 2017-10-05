@@ -1,0 +1,14 @@
+358838 4E.concordant_mult
+510 4E.concordant_transloc
+313982 4E.concordant_uniq
+56336 4E.halfmapping_mult
+5364 4E.halfmapping_transloc
+103354 4E.halfmapping_uniq
+9028312 4E.nomapping
+80 4E.paired_mult
+35 4E.paired_uniq_inv
+0 4E.paired_uniq_long
+128 4E.paired_uniq_scr
+4640 4E.unpaired_mult
+301 4E.unpaired_transloc
+2572 4E.unpaired_uniq

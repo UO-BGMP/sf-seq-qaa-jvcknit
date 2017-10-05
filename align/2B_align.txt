@@ -1,0 +1,14 @@
+138394 2B.concordant_mult
+694 2B.concordant_transloc
+299224 2B.concordant_uniq
+50140 2B.halfmapping_mult
+5931 2B.halfmapping_transloc
+101084 2B.halfmapping_uniq
+11132066 2B.nomapping
+84 2B.paired_mult
+52 2B.paired_uniq_inv
+0 2B.paired_uniq_long
+229 2B.paired_uniq_scr
+5088 2B.unpaired_mult
+431 2B.unpaired_transloc
+3194 2B.unpaired_uniq
